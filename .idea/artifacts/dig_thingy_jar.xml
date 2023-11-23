@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="dig-thingy:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/dig_thingy_jar</output-path>
+    <root id="archive" name="dig-thingy.jar">
+      <element id="module-output" name="dig-thingy" />
+    </root>
+  </artifact>
+</component>

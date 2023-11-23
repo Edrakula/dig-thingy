@@ -1,6 +1,7 @@
 import java.util.Random;
 import java.util.Scanner;
 class Player{
+    int upgradeCost = 50;
     int x = 50;
     int y = 10;
     int score = 0;
@@ -11,7 +12,6 @@ class Player{
 class Tile{
     String sprite = "-";
     int scoreToGive = 0;
-
 }
 
 class Stone extends Tile{
@@ -27,6 +27,13 @@ class Coal extends Tile{
     }
 }
 
+class Iron extends Tile{
+    Iron(){
+        sprite = "i";
+        scoreToGive = 4;
+    }
+}
+
 class Ladder extends Tile{
     Ladder(){
         sprite = "=";
@@ -37,30 +44,39 @@ public class Main {
     static Random rng = new Random();
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Hello and welcome!");
         int height = 100;
         int width = 100;
-
+        Player player = new Player();
         Tile[][] map = GenerateMap(width, height);
 
+        boolean[][] revealedMap = new boolean[width][height];
         char input = 'L';
-        Player player = new Player();
 
         while (input != 'q'){
-            String screen = getMap(player, height, map);
+            revealAroundPlayer(revealedMap, player);
+            String screen = getMap(player, height, map, revealedMap);
             System.out.println(screen);
             System.out.println("score: " + player.score + ". moves left: " + player.movesLeft);
+            if (player.y <= 10){
+                System.out.println("Press b to upgrade by paying " + player.upgradeCost + " score");
+            }
             // ------------------------------------------------ input ------------------------------------
             input = scanner.next().charAt(0);
             switch (input){
                 case 'a':
-                    player.x --;
+                    if (player.x > 0){
+                        player.x --;
+                    }
                     break;
                 case 'd':
-                    player.x ++;
+                    if (player.x < width - 1){
+                        player.x ++;
+                    }
                     break;
                 case 's':
-                    player.y ++;
+                    if (player.y < height - 1){
+                        player.y ++;
+                    }
                     break;
                 case 'w':
                     if (player.y > 0){
@@ -82,7 +98,8 @@ public class Main {
             if (player.movesLeft <= 0){
                 break;
             }
-            if (player.y < height - 2 && map[player.x][player.y + 2].getClass().getName().equals("Tile")){
+            // gravity
+            if (player.y < height - 2 && map[player.x][player.y + 1].getClass().getName().equals("Tile") && map[player.x][player.y + 2].getClass().getName().equals("Tile")){
                 player.y ++;
             }
         }
@@ -91,17 +108,20 @@ public class Main {
     }
 
 
-    private static String getMap(Player player, int height, Tile[][] map) {
+    private static String getMap(Player player, int height, Tile[][] map, boolean[][] revealedMap) {
         String screen = "";
         // ----------------------------------- setup screen ----------------------
-        if (player.y >= 5 && player.y < height - 5){
+        if (player.y > 5 && player.y < height - 5){
             for (int y = player.y - 5; y < player.y + 5; y++){
                 for (int x = player.x - 10; x < player.x + 10; x++){
                     if (x == player.x && y == player.y){
                         screen = screen.concat(player.sprite);
                     }
-                    else {
+                    else if (revealedMap[x][y]){
                         screen = screen.concat(map[x][y].sprite);
+                    }
+                    else {
+                        screen = screen.concat("?");
                     }
                 }
                 screen = screen.concat("\n");
@@ -112,8 +132,11 @@ public class Main {
                     if (x == player.x && y == player.y){
                         screen = screen.concat(player.sprite);
                     }
-                    else {
+                    else if (revealedMap[x][y]){
                         screen = screen.concat(map[x][y].sprite);
+                    }
+                    else {
+                        screen = screen.concat("?");
                     }
                 }
                 screen = screen.concat("\n");
@@ -124,8 +147,11 @@ public class Main {
                     if (x == player.x && y == player.y){
                         screen = screen.concat(player.sprite);
                     }
-                    else {
+                    else if (revealedMap[x][y]){
                         screen = screen.concat(map[x][y].sprite);
+                    }
+                    else {
+                        screen = screen.concat("?");
                     }
                 }
                 screen = screen.concat("\n");
@@ -134,14 +160,24 @@ public class Main {
         return screen;
     }
 
-    static Tile[][] GenerateMap(int width, int height){
+    private static void revealAroundPlayer(boolean[][] revealedMap, Player player){
+        for (int x = player.x - 3; x <= player.x + 3; x++){
+            for (int y = player.y - 2; y <= player.y + 2; y++){
+                revealedMap[x][y] = true;
+            }
+        }
+    }
+    private static Tile[][] GenerateMap(int width, int height){
         Tile[][] tempMap = new Tile[width][height];
         for (int x = 0; x < width; x++){
             for (int y = 0; y < height; y++){
                 tempMap[x][y] = new Tile();
                 if (y>10){
-                    if (rng.nextInt(100) < 20){
+                    if (rng.nextInt(100) < 20) {
                         tempMap[x][y] = new Coal();
+                    }
+                    else if (y > 30 && rng.nextInt(100) < 20){
+                        tempMap[x][y] = new Iron();
                     }
                     else {
                         tempMap[x][y] = new Stone();
